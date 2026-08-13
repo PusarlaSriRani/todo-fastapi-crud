@@ -1,49 +1,46 @@
-from app.schema import TodoCreate , TodoResponse , TodoUpdate
- 
+from app.schema import TodoCreate, TodoUpdate
+
 todos = []
 
-todo_id_counter =1
-
-def create_todo(todo:TodoCreate):
-    global todo_id_counter
+def create_todo(todo: TodoCreate):
     new_todo = {
-        "id":todo_id_counter,
-        "title" :todo.title,
-        "description" : todo.description,
+        "id": len(todos) + 1,
+        "title": todo.title,
+        "description": todo.description,
         "completed": False
-    } 
-    
-    todos.append(new_todo)
+    }
 
-    todo_id_counter +=1
+    todos.append(new_todo)
     return new_todo
 
 def get_all_todos():
     return todos
 
-def get_todo_by_id(todo_id :int):
+def get_todo_by_id(todo_id: int):
     for todo in todos:
         if todo["id"] == todo_id:
             return todo
     return None
 
-def delete_todo(todo_id:int):
-    todo = get_todo_by_id(todo_id)
+def update_todo(todo_id: int, todo_update: TodoUpdate):
+    for todo in todos:
+        if todo["id"] == todo_id:
+            todo["title"] = todo_update.title
+            todo["description"] = todo_update.description
+            return todo
+    return None
 
-    if not todo:
-        return None
-    
-    todos.remove(todo)
+def patch_todo(todo_id: int, todo_update: TodoUpdate):
+    for todo in todos:
+        if todo["id"] == todo_id:
+            update_data = todo_update.dict(exclude_unset=True)
+            todo.update(update_data)
+            return todo
+    return None
+def delete_todo(todo_id: int):
+    for todo in todos:
+        if todo["id"] == todo_id:
+            todos.remove(todo)
+            return todo
 
-    return todo
-
-def update_todo(todo_id: int, todo_data:TodoUpdate):
-    todo = get_todo_by_id(todo_id)
-    if not todo:
-        return None
-    updated_data = todo_data.model_dump(exclude_unset=True)
-
-    for key,value in updated_data.items():
-        todo[key] = value 
-    
-    return todo
+    return None

@@ -3,45 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Todo CRUD App</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 10px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            background-color: #0077cc;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #005fa3;
+        }
+
+        .todo-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .todo-card h3 {
+            color: #0077cc;
+            margin: 0 0 10px;
+        }
+
+        .completed {
+            color: green;
+            font-weight: bold;
+        }
+
+        .not-completed {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <script>
-        async function getToDos() {
-            const fetchToDos = await fetch('http://127.0.0.1:8000/todos/')
-            console.log(fetchToDos)
-            const todoData =await fetchToDos.json()
-            console.log(todoData)
-        
-            todoData.map((todo)=>{
-            const todoCard = document.createElement('div')
-            todoCard.className = "todo"
-            todoCard.innerHTML = `<h3>Title : ${todo.title}</h3> <p>Content : ${todo.description}</p>`
-            document.body.append(todoCard)
-            
-        })
-        } 
-        getToDos()
 
-    async function postToDo(title, description) {
-            const createToDo = await fetch('http://127.0.0.1:8000/todos/',{
-                method: "POST",
+    <h2>Todo CRUD Operations</h2>
+
+    <div class="button-container">
+        <button onclick="addSampleTodo()">Add Todo</button>
+        <button onclick="updateFirstTodo()">Update First Todo</button>
+        <button onclick="patchFirstTodo()">Patch First Todo</button>
+        <button onclick="deleteLastTodo()">Delete Last Todo</button>
+        <button onclick="clearTodos()">Clear All Todos</button>
+    </div>
+
+    <div id="todoContainer"></div>
+
+    <script>
+
+        // ================= GET =================
+        async function getToDos() {
+            const response = await fetch('http://127.0.0.1:8000/todos/')
+            const data = await response.json()
+
+            console.log('GET =>', data)
+
+            const container = document.getElementById('todoContainer')
+            container.innerHTML = ''
+
+            data.map((todo) => {
+                const card = document.createElement('div')
+                card.className = 'todo-card'
+
+                card.innerHTML = `
+                    <h3>${todo.title}</h3>
+                    <p><strong>Description:</strong> ${todo.description}</p>
+                    <p class="${todo.completed ? 'completed' : 'not-completed'}">
+                        <strong>Completed:</strong> ${todo.completed}
+                    </p>
+                `
+
+                container.append(card)
+            })
+        }
+
+
+        // ================= POST =================
+        async function postToDo(title, description) {
+            await fetch('http://127.0.0.1:8000/todos/', {
+                method: 'POST',
                 headers: {
-                    "Content-Type":"application/json"
+                    'Content-Type': 'application/json'
                 },
-                body  : JSON.stringify({
-                "title": title,
-                "description": description
+                body: JSON.stringify({ title, description })
             })
-            
-            
+        }
+
+
+        // ================= PUT =================
+        async function putToDo(id, title, description) {
+            await fetch(`http://127.0.0.1:8000/todos/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title, description })
             })
-    const postToDos =  await createToDo
-    console.log(postToDos)
-}
-    postToDo("task2","completed")
-     postToDo("task3","in progress")
-       
+        }
+
+
+        // ================= PATCH =================
+        async function patchToDo(id, description) {
+            await fetch(`http://127.0.0.1:8000/todos/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    description,
+                    completed: true
+                })
+            })
+        }
+
+
+        // ================= DELETE =================
+        async function deleteToDo(id) {
+            await fetch(`http://127.0.0.1:8000/todos/${id}`, {
+                method: 'DELETE'
+            })
+        }
+
+
+        // ================= MANUAL BUTTON FUNCTIONS =================
+        async function addSampleTodo() {
+            const count = Math.floor(Math.random() * 1000)
+            await postToDo(`Task ${count}`, 'Created manually')
+            await getToDos()
+        }
+
+        async function updateFirstTodo() {
+            await putToDo(1, 'Updated Task 1', 'Updated using PUT API')
+            await getToDos()
+        }
+
+        async function patchFirstTodo() {
+            await patchToDo(1, 'Patched using PATCH API')
+            await getToDos()
+        }
+
+        async function deleteLastTodo() {
+            const todos = await fetch('http://127.0.0.1:8000/todos/')
+                .then(res => res.json())
+
+            if (todos.length > 0) {
+                const lastTodo = todos[todos.length - 1]
+                await deleteToDo(lastTodo.id)
+                await getToDos()
+            }
+        }
+
+        async function clearTodos() {
+            const todos = await fetch('http://127.0.0.1:8000/todos/')
+                .then(res => res.json())
+
+            for (const todo of todos) {
+                await deleteToDo(todo.id)
+            }
+
+            await getToDos()
+        }
+
+
+        // ================= AUTO DEMO =================
+        async function startApp() {
+            const todos = await fetch('http://127.0.0.1:8000/todos/')
+                .then(res => res.json())
+
+            // Run only if database is empty
+            if (todos.length === 0) {
+                await postToDo('Task 1', 'Learn FastAPI')
+                await postToDo('Task 2', 'Learn Fetch API')
+
+                await putToDo(1, 'Updated Task 1', 'Updated using PUT API')
+                await patchToDo(1, 'Patched using PATCH API')
+            }
+
+            await getToDos()
+        }
+
+
+        startApp()
+
     </script>
 </body>
 </html>

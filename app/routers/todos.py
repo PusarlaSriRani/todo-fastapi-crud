@@ -41,3 +41,14 @@ def update_todo(todo_id: int, todo: TodoUpdate):
         raise HTTPException(status_code=404, detail="Todo not found")
 
     return updated_todo
+
+
+# ================= PATCH =================
+@router.patch("/{todo_id}", response_model=TodoResponse)
+def patch_todo(todo_id: int, todo: TodoUpdate):
+    patched_todo = crud.patch_todo(todo_id, todo)
+
+    if not patched_todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+
+    return patched_todo
