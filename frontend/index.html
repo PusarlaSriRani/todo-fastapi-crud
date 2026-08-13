@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        async function getToDos() {
+            const fetchToDos = await fetch('http://127.0.0.1:8000/todos/')
+            console.log(fetchToDos)
+            const todoData =await fetchToDos.json()
+            console.log(todoData)
+        
+            todoData.map((todo)=>{
+            const todoCard = document.createElement('div')
+            todoCard.className = "todo"
+            todoCard.innerHTML = `<h3>Title : ${todo.title}</h3> <p>Content : ${todo.description}</p>`
+            document.body.append(todoCard)
+            
+        })
+        } 
+        getToDos()
+
+    async function postToDo(title, description) {
+            const createToDo = await fetch('http://127.0.0.1:8000/todos/',{
+                method: "POST",
+                headers: {
+                    "Content-Type":"application/json"
+                },
+                body  : JSON.stringify({
+                "title": title,
+                "description": description
+            })
+            
+            
+            })
+    const postToDos =  await createToDo
+    console.log(postToDos)
+}
+    postToDo("task2","completed")
+     postToDo("task3","in progress")
+       
+    </script>
+</body>
+</html>
